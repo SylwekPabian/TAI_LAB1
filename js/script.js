@@ -14,6 +14,7 @@ for (i=1; i<=10; i++)
 console.log(tab);
 */
 
+/*
 let preQuestions =
     [
         {
@@ -186,6 +187,16 @@ let preQuestions =
                 "Video Card"
             ]
         }];
+*/
+
+let preQuestion = [{
+    "category": String,
+    "type": String,
+    "difficulty": String,
+    "question": String,
+    "correct_answer": String,
+    "answers": [String]
+}];
 
 let next = document.querySelector('.next');
 let previous = document.querySelector('.previous');
@@ -211,8 +222,6 @@ for (let i = 0; i < answers.length; i++) {
     answers[i].addEventListener('click', doAction);
 }
 
-setQuestion(0);
-
 function doAction(event) {
     //event.target - Zwraca referencję do elementu, do którego zdarzenie zostało pierwotnie wysłane.
     if (event.target.innerHTML === preQuestions[index].correct_answer) {
@@ -224,6 +233,8 @@ function doAction(event) {
     }
     disableAnswers();
 }
+
+activateAnswers();
 
 function setQuestion(index) {
     clearClass();
@@ -245,41 +256,56 @@ function setQuestion(index) {
     questionNumber.innerHTML = index + 1;
 }
 
-next.addEventListener('click', function () {
-    index++;
-    if (index >= preQuestions.length) {
-        list.style.display = 'none';
-        results.style.display = 'block';
-        userScorePoint.innerHTML = points;
-        let previousScore = JSON.parse(localStorage.getItem("score"));
-        let averagePoints = (previousScore + points) / 2;
-        average.innerHTML = averagePoints;
-        localStorage.setItem("score", JSON.stringify(averagePoints));
-    } else {
-        setQuestion(index);
-        activateAnswers();
-    }
-});
+fetch('https://quiztai.herokuapp.com/api/quiz')
+    .then(resp => resp.json())
+    .then(resp => {
+        preQuestions = resp;
+        setQuestion(0);
 
-previous.addEventListener('click', function () {
-    if (index > 0) {
-        index--;
-    }
-    setQuestion(index);
-    activateAnswers();
-});
+        next.addEventListener('click', function () {
+            index++;
+            if (index >= preQuestions.length) {
+                list.style.display = 'none';
+                results.style.display = 'block';
+                userScorePoint.innerHTML = points;
+                let averagePoints = JSON.parse(localStorage.getItem("averagePoints"));
+                if (averagePoints == null) {
+                    averagePoints = 0;
+                }
+                let numOfGames = JSON.parse(localStorage.getItem("numOfGames"));
+                if (numOfGames == null) {
+                    numOfGames = 0;
+                }
+                averagePoints = (points + (averagePoints * numOfGames)) / (numOfGames + 1);
+                average.innerHTML = averagePoints;
+                localStorage.setItem("averagePoints", JSON.stringify(averagePoints));
+                localStorage.setItem("numOfGames", JSON.stringify(numOfGames + 1));
+            } else {
+                setQuestion(index);
+                activateAnswers();
+            }
+        });
 
-restart.addEventListener('click', function (event) {
-    event.preventDefault();
-    index = 0;
-    points = 0;
-    let userScorePoint = document.querySelector('.score');
-    userScorePoint.innerHTML = points;
-    setQuestion(index);
-    activateAnswers();
-    list.style.display = 'block';
-    results.style.display = 'none';
-});
+        previous.addEventListener('click', function () {
+            if (index > 0) {
+                index--;
+            }
+            setQuestion(index);
+            activateAnswers();
+        });
+
+        restart.addEventListener('click', function (event) {
+            event.preventDefault();
+            index = 0;
+            points = 0;
+            let userScorePoint = document.querySelector('.score');
+            userScorePoint.innerHTML = points;
+            setQuestion(index);
+            activateAnswers();
+            list.style.display = 'block';
+            results.style.display = 'none';
+        });
+    });
 
 function activateAnswers() {
     for (let i = 0; i < answers.length; i++) {
