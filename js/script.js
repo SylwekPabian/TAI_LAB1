@@ -193,10 +193,17 @@ let previous = document.querySelector('.previous');
 let question = document.querySelector('.question');
 let answers = document.querySelectorAll('.list-group-item');
 
+let userScorePoint = document.querySelector('.userScorePoint');
+let list = document.querySelector('.list');
+let results = document.querySelector('.results');
+let average = document.querySelector('.average');
+
 let pointsElem = document.querySelector('.score');
 let restart = document.querySelector('.restart');
 
-let score = document.querySelector('#index');
+
+let questionNumber = document.querySelector('.questionNumber');
+
 let index = 0;
 let points = 0;
 
@@ -204,21 +211,22 @@ for (let i = 0; i < answers.length; i++) {
     answers[i].addEventListener('click', doAction);
 }
 
+setQuestion(0);
+
 function doAction(event) {
     //event.target - Zwraca referencję do elementu, do którego zdarzenie zostało pierwotnie wysłane.
     if (event.target.innerHTML === preQuestions[index].correct_answer) {
         points++;
         pointsElem.innerText = points;
         markCorrect(event.target);
-    }
-    else {
+    } else {
         markInCorrect(event.target);
     }
     disableAnswers();
 }
 
 function setQuestion(index) {
-    //clearClass();
+    clearClass();
     question.innerHTML = preQuestions[index].question;
 
     answers[0].innerHTML = preQuestions[index].answers[0];
@@ -233,16 +241,23 @@ function setQuestion(index) {
         answers[2].style.display = 'block';
         answers[3].style.display = 'block';
     }
+
+    questionNumber.innerHTML = index + 1;
 }
 
 next.addEventListener('click', function () {
+    index++;
     if (index >= preQuestions.length) {
-
-
+        list.style.display = 'none';
+        results.style.display = 'block';
+        userScorePoint.innerHTML = points;
+        let previousScore = JSON.parse(localStorage.getItem("score"));
+        let averagePoints = (previousScore + points) / 2;
+        average.innerHTML = averagePoints;
+        localStorage.setItem("score", JSON.stringify(averagePoints));
     } else {
-        index++;
         setQuestion(index);
-        //activateAnswers();
+        activateAnswers();
     }
 });
 
@@ -251,7 +266,7 @@ previous.addEventListener('click', function () {
         index--;
     }
     setQuestion(index);
-    //activateAnswers();
+    activateAnswers();
 });
 
 restart.addEventListener('click', function (event) {
@@ -265,3 +280,32 @@ restart.addEventListener('click', function (event) {
     list.style.display = 'block';
     results.style.display = 'none';
 });
+
+function activateAnswers() {
+    for (let i = 0; i < answers.length; i++) {
+        answers[i].addEventListener('click', doAction);
+    }
+}
+
+function disableAnswers() {
+    for (let i = 0; i < answers.length; i++) {
+        answers[i].removeEventListener('click', doAction);
+    }
+}
+
+function markCorrect(elem) {
+    elem.classList.add('correct')
+}
+
+function markInCorrect(elem) {
+    elem.classList.add('incorrect')
+}
+
+function clearClass() {
+    for (let i = 0; i < answers.length; i++) {
+        answers[i].classList.remove('incorrect');
+        answers[i].classList.remove('correct');
+    }
+}
+
+
